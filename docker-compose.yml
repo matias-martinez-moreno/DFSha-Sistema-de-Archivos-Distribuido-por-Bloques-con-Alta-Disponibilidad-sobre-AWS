@@ -1,0 +1,145 @@
+# Clúster DFSha local: 2 ControlNodes y 4 DataNodes en una red privada de Docker.
+#
+# Antes de levantarlo:   python scripts/generar_seguridad.py   (crea certs/ y .env)
+# Levantar:              docker compose up -d --build
+# Desde el cliente:      dfsha config https://localhost:8001,https://localhost:8002 certs/ca.crt
+#
+# Cada nodo tiene dos direcciones: la pública (localhost:puerto, la usa el
+# cliente) y la interna (nombre del contenedor, la usan los nodos entre sí).
+
+x-common-env: &common-env
+  JWT_SECRET: ${JWT_SECRET}
+  INTERNAL_KEY: ${INTERNAL_KEY}
+  BLOCK_TOKEN_SECRET: ${BLOCK_TOKEN_SECRET}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+  TLS_CA: /certs/ca.crt
+  INTERNAL_CIDRS: 172.28.0.0/16
+  REPLICATION_FACTOR: "3"
+  MIN_REPLICAS: "2"
+  BLOCK_SIZE: "4194304"
+
+x-controlnode: &controlnode
+  build: .
+  image: dfsha:latest
+  command: python -m dfsha.controlnode
+  restart: unless-stopped
+  networks: [dfsha]
+
+x-datanode: &datanode
+  build: .
+  image: dfsha:latest
+  command: python -m dfsha.datanode
+  restart: unless-stopped
+  networks: [dfsha]
+  depends_on: [controlnode1]
+
+services:
+  controlnode1:
+    <<: *controlnode
+    container_name: controlnode1
+    ports: ["8001:8000"]
+    environment:
+      <<: *common-env
+      NODE_ID: controlnode1
+      INTERNAL_URL: https://controlnode1:8000
+      PEER_URL: https://controlnode2:8000
+      DB_PATH: /data/metadata.db
+      TLS_CERT: /certs/controlnode1.crt
+      TLS_KEY: /certs/controlnode1.key
+    volumes: ["./certs:/certs:ro", "cn1-data:/data"]
+
+  controlnode2:
+    <<: *controlnode
+    container_name: controlnode2
+    ports: ["8002:8000"]
+    environment:
+      <<: *common-env
+      NODE_ID: controlnode2
+      INTERNAL_URL: https://controlnode2:8000
+      PEER_URL: https://controlnode1:8000
+      DB_PATH: /data/metadata.db
+      TLS_CERT: /certs/controlnode2.crt
+      TLS_KEY: /certs/controlnode2.key
+    volumes: ["./certs:/certs:ro", "cn2-data:/data"]
+
+  datanode1:
+    <<: *datanode
+    container_name: datanode1
+    ports: ["8101:8100"]
+    environment:
+      <<: *common-env
+      NODE_ID: datanode1
+      PORT: "8100"
+      PUBLIC_URL: https://localhost:8101
+      INTERNAL_URL: https://datanode1:8100
+      CONTROL_URLS: https://controlnode1:8000,https://controlnode2:8000
+      DATA_DIR: /data
+      STORAGE_KEY: ${STORAGE_KEY_DATANODE1}
+      TLS_CERT: /certs/datanode1.crt
+      TLS_KEY: /certs/datanode1.key
+    volumes: ["./certs:/certs:ro", "dn1-data:/data"]
+
+  datanode2:
+    <<: *datanode
+    container_name: datanode2
+    ports: ["8102:8100"]
+    environment:
+      <<: *common-env
+      NODE_ID: datanode2
+      PORT: "8100"
+      PUBLIC_URL: https://localhost:8102
+      INTERNAL_URL: https://datanode2:8100
+      CONTROL_URLS: https://controlnode1:8000,https://controlnode2:8000
+      DATA_DIR: /data
+      STORAGE_KEY: ${STORAGE_KEY_DATANODE2}
+      TLS_CERT: /certs/datanode2.crt
+      TLS_KEY: /certs/datanode2.key
+    volumes: ["./certs:/certs:ro", "dn2-data:/data"]
+
+  datanode3:
+    <<: *datanode
+    container_name: datanode3
+    ports: ["8103:8100"]
+    environment:
+      <<: *common-env
+      NODE_ID: datanode3
+      PORT: "8100"
+      PUBLIC_URL: https://localhost:8103
+      INTERNAL_URL: https://datanode3:8100
+      CONTROL_URLS: https://controlnode1:8000,https://controlnode2:8000
+      DATA_DIR: /data
+      STORAGE_KEY: ${STORAGE_KEY_DATANODE3}
+      TLS_CERT: /certs/datanode3.crt
+      TLS_KEY: /certs/datanode3.key
+    volumes: ["./certs:/certs:ro", "dn3-data:/data"]
+
+  datanode4:
+    <<: *datanode
+    container_name: datanode4
+    ports: ["8104:8100"]
+    environment:
+      <<: *common-env
+      NODE_ID: datanode4
+      PORT: "8100"
+      PUBLIC_URL: https://localhost:8104
+      INTERNAL_URL: https://datanode4:8100
+      CONTROL_URLS: https://controlnode1:8000,https://controlnode2:8000
+      DATA_DIR: /data
+      STORAGE_KEY: ${STORAGE_KEY_DATANODE4}
+      TLS_CERT: /certs/datanode4.crt
+      TLS_KEY: /certs/datanode4.key
+    volumes: ["./certs:/certs:ro", "dn4-data:/data"]
+
+networks:
+  dfsha:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  cn1-data:
+  cn2-data:
+  dn1-data:
+  dn2-data:
+  dn3-data:
+  dn4-data:

@@ -1,0 +1,46 @@
+#!/bin/bash
+# Arranque de ${node_name} (${component}). Lo ejecuta la EC2 una sola vez al crearse.
+set -euxo pipefail
+exec > /var/log/dfsha-setup.log 2>&1
+
+apt-get update -y
+apt-get install -y docker.io git curl
+systemctl enable --now docker
+usermod -aG docker ubuntu
+
+mkdir -p /opt/dfsha/certs /opt/dfsha/data
+
+cat > /opt/dfsha/certs/ca.crt <<'CERTEOF'
+${ca_crt}
+CERTEOF
+cat > /opt/dfsha/certs/node.crt <<'CERTEOF'
+${node_crt}
+CERTEOF
+cat > /opt/dfsha/certs/node.key <<'CERTEOF'
+${node_key}
+CERTEOF
+chmod 600 /opt/dfsha/certs/node.key
+
+cat > /opt/dfsha/node.env <<'ENVEOF'
+%{ for key, value in env ~}
+${key}=${value}
+%{ endfor ~}
+ENVEOF
+
+# La IP pública solo se conoce cuando la máquina ya existe; se pide al servicio de metadatos de EC2
+IMDS_TOKEN=$(curl -sX PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+echo "PUBLIC_URL=https://$PUBLIC_IP:${port}" >> /opt/dfsha/node.env
+chmod 600 /opt/dfsha/node.env
+
+git clone --depth 1 --branch ${repo_branch} ${repo_url} /opt/dfsha/src
+docker build -t dfsha:latest /opt/dfsha/src
+
+docker run -d --name ${node_name} --restart unless-stopped \
+  --env-file /opt/dfsha/node.env \
+  -p ${port}:${port} \
+  -v /opt/dfsha/data:/data \
+  -v /opt/dfsha/certs:/certs:ro \
+  dfsha:latest python -m dfsha.${component}
+
+echo "DFSha ${node_name} listo"

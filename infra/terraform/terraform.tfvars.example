@@ -1,0 +1,12 @@
+# Copie este archivo como terraform.tfvars y cambie los valores.
+# terraform.tfvars NO se sube a GitHub (está en .gitignore).
+
+admin_password = "cambie-esta-clave"
+datanode_count = 4
+instance_type  = "t3.small"
+
+# Recomendado: solo su IP para SSH, por ejemplo "181.50.10.20/32"
+allowed_ssh_cidr = "0.0.0.0/0"
+
+# Si despliega desde una rama distinta a main
+# repo_branch = "main"

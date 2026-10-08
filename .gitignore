@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+
+# Secretos y certificados (se generan con scripts/generar_seguridad.py)
+.env
+certs/
+
+# Datos de los nodos cuando se corren localmente
+data/
+
+# Archivos de prueba generados (scripts/generar_archivos.py)
+pruebas/
+descargas/
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/terraform.tfvars
+infra/terraform/.terraform.lock.hcl
+infra/terraform/crash.log
+
+# Varios
+.DS_Store
+*.log

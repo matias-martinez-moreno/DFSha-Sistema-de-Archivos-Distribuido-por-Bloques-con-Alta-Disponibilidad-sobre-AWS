@@ -1,0 +1,13 @@
+.git
+.venv
+.env
+certs
+data
+pruebas
+descargas
+resultados
+infra
+docs
+tests
+**/__pycache__
+*.egg-info

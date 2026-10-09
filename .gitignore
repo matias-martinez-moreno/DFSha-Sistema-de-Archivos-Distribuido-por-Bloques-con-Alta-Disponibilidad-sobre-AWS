@@ -11,6 +11,7 @@ dist/
 # Secretos y certificados (se generan con scripts/generar_seguridad.py)
 .env
 certs/
+*.pem
 
 # Datos de los nodos cuando se corren localmente
 data/
@@ -18,6 +19,7 @@ data/
 # Archivos de prueba generados (scripts/generar_archivos.py)
 pruebas/
 descargas/
+resultados/
 
 # Terraform
 infra/terraform/.terraform/
@@ -26,6 +28,7 @@ infra/terraform/*.tfstate.*
 infra/terraform/terraform.tfvars
 infra/terraform/.terraform.lock.hcl
 infra/terraform/crash.log
+infra/terraform/*.tfplan
 
 # Varios
 .DS_Store

@@ -8,6 +8,7 @@ Variables de entorno:
     DFSHA_CONTROL         URLs de los ControlNodes separadas por coma
     DFSHA_CA              ruta de certs/ca.crt
     DFSHA_ADMIN_PASSWORD  contraseña del admin (para crear el usuario de carga)
+    DFSHA_WAIT_MIN y DFSHA_WAIT_MAX  pausa entre operaciones de cada usuario (0.5 y 2 por defecto)
 
 Ejemplo con interfaz web (http://localhost:8089):
     locust -f load/locustfile.py
@@ -49,7 +50,7 @@ def crear_usuario_de_carga(environment, **_kwargs):
 
 
 class DFSUser(User):
-    wait_time = between(0.5, 2)
+    wait_time = between(float(os.environ.get("DFSHA_WAIT_MIN", 0.5)), float(os.environ.get("DFSHA_WAIT_MAX", 2)))
 
     def on_start(self):
         self.client = DFSClient(CONTROL, CA, workers=2)

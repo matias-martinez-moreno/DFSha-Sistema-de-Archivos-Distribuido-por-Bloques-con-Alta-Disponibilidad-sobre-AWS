@@ -5,7 +5,9 @@ Proyecto 1 de Sistemas Distribuidos, EAFIT 2026-2. Opción 1: cliente/servidor. 
 
 Cada archivo se parte en bloques de 4 MB y cada bloque se guarda en 3 DataNodes distintos. Dos ControlNodes, un líder y un seguidor, guardan los metadatos. Todo va por REST sobre HTTPS, los bloques se guardan cifrados y hay permisos por usuario y grupo.
 
-El informe está en [docs/informe.docx](docs/informe.docx).
+El informe está en [docs/informe.docx](docs/informe.pdf).
+Link video: https://youtu.be/EXfGDpnk5QI
+
 
 ## Estructura
 
